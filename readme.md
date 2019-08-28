@@ -46,4 +46,5 @@ Work in Progress
 - Refactoring the functionality of using Rekognition and Polly by moving the functions away from the main lambda function to utils.
 - Added DynamoDb as part of the serverless deployment. Need to work on the functionality to track users and state in the tables.
 - Need to work on adding the functionality of SNS and email where if a unknown person is detected, a SMS and a email with the picture of the person is sent to the admins.
+- Add CI/CD to the code base.
 ?????????
