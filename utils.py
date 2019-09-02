@@ -45,7 +45,7 @@ def generate_mp3(user_name):
 
     message = '<speak>\n<prosody rate=\"medium\"><amazon:breath duration=\"long\" volume=\"soft\"/>Good ' + greetingString + ', Welcome to the Office ' + user_name +' <amazon:breath duration=\"short\" volume=\"x-soft\"/></prosody>\n</speak>'
     
-    return responsePolly = polly.synthesize_speech(
+    return polly.synthesize_speech(
         OutputFormat = 'mp3',
         TextType = 'ssml',
         Text = message,

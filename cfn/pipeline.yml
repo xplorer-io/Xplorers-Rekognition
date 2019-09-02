@@ -1,0 +1,214 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# *** Change this to something useful for you!
+Description: Xplorers-Pipeline
+
+Parameters:
+  # *** This value must always be passed in when creating / updating stack
+  # "NoEcho" is set to true, for security, so token won't be visible when examining the resulting stack
+  GitHubOAuthToken:
+    Type: String
+    Description: Github PAT
+
+  GitHubOwner:
+    Type: String
+    Default: 'xplorer-io'
+    AllowedPattern: "[A-Za-z0-9-]+"
+
+  GitHubRepo:
+    Type: String
+    AllowedPattern: "[A-Za-z0-9-]+"
+    Default: 'Xplorers-Rekognition'
+
+  GitHubBranch:
+    Type: String
+    AllowedPattern: "[A-Za-z0-9-]+"
+
+  BuildImageId:
+    Type: String
+    Default: 'aws/codebuild/amazonlinux2-x86_64-standard:1.0'
+
+  NetworkStack:
+    Type: String
+
+  S3ConfigBucket:
+    Type: String
+
+  KnownBucket:
+    Type: String
+
+  UnknownBucket:
+    Type: String
+
+  RekogCollectionId:
+    Type: String
+
+  SlackApiToken:
+    Type: String
+
+  SlackChannelId:
+    Type: String
+
+  SlackTrainingChannel:
+    Type: String
+
+  AccountNumber:
+    Type: String
+
+Resources:
+  PipelineArtifactsBucket:
+    Type: AWS::S3::Bucket
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineArtifactsBucket
+      RestartExecutionOnUpdate: true
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: Source
+          InputArtifacts: []
+          ActionTypeId:
+            Category: Source
+            Owner: ThirdParty
+            Version: 1
+            Provider: GitHub
+          OutputArtifacts:
+          - Name: SourceCode
+          Configuration:
+            Owner: !Ref GitHubOwner
+            Repo: !Ref GitHubRepo
+            Branch: !Ref GitHubBranch
+            PollForSourceChanges: false
+            OAuthToken: !Ref GitHubOAuthToken
+          RunOrder: 1
+
+      - Name: StartServerlessDeployment
+        Actions:
+          - Name: XplorersProject
+            InputArtifacts:
+              - Name: SourceCode
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref XplorersProject
+
+  XplorersProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: codebuild/buildspec.yml
+      Environment:
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: !Ref BuildImageId
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: GitHubOwner
+            Value: !Ref GitHubOwner
+          - Name: GITHUB_BRANCH
+            Value: !Ref GitHubBranch
+          - Name: NETWORK_STACK
+            Value: !Ref NetworkStack
+          - Name: KNOWN_BUCKET_NAME
+            Value: !Ref KnownBucket
+          - Name: UNKNOWN_BUCKET_NAME
+            Value: !Ref UnknownBucket
+          - Name: REKOGNITION_COLLECTION_ID
+            Value: !Ref RekogCollectionId
+          - Name: SLACK_API_TOKEN
+            Value: !Ref SlackApiToken
+          - Name: SLACK_CHANNEL_ID
+            Value: !Ref SlackChannelId
+          - Name: SLACK_TRAINING_CHANNEL_ID
+            Value: !Ref SlackTrainingChannel
+          - Name: AWS_ACCOUNT_NUMBER
+            Value: !Ref AccountNumber                       
+          - Name: BUILD_SUBNET_ID
+            Value:
+              Fn::ImportValue: !Sub ${NetworkStack}-SubnetPrivateA
+          - Name: BUILD_VPC_ID
+            Value:
+              Fn::ImportValue: !Sub ${NetworkStack}-VPCID
+          - Name: S3_CONFIG_BUCKET
+            Value: !Ref S3ConfigBucket
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      VpcConfig:
+        VpcId: 
+          Fn::ImportValue: !Sub ${NetworkStack}-VPCID
+        Subnets:
+          - Fn::ImportValue: !Sub ${NetworkStack}-SubnetPrivateA
+          - Fn::ImportValue: !Sub ${NetworkStack}-SubnetPrivateB
+        SecurityGroupIds:
+          - !Ref PipelineSecurityGroup
+
+  # 'GithubWebhook' satisfies two requirements:
+  # -- Means that updates are pushed from GitHub, rather than AWS having to poll
+  # -- Means we can filter for required changes
+  GithubWebhook:
+    Type: 'AWS::CodePipeline::Webhook'
+    Properties:
+      Authentication: GITHUB_HMAC
+      AuthenticationConfiguration:
+        SecretToken: !Ref GitHubOAuthToken
+      RegisterWithThirdParty: 'true'
+      Filters:
+      - JsonPath: "$.ref"
+        MatchEquals: !Sub refs/heads/{Branch}
+      TargetPipeline: !Ref CodePipeline
+      TargetAction: Source
+      TargetPipelineVersion: !GetAtt CodePipeline.Version
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess #TODO: Reduce permissions
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "codebuild.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      Policies:
+        - PolicyName: !Sub iam-${GitHubBranch}-CodeBuildPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
+  PipelineSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh
+      VpcId:
+        Fn::ImportValue: !Sub ${NetworkStack}-VPCID
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 10.20.0.0/8

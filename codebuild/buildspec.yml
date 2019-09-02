@@ -1,0 +1,22 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+        golang: 1.12 #using GoLang as a runtime builder
+    commands:
+      - wget https://www.python.org/ftp/python/3.6.0/Python-3.6.0.tar.xz
+      - tar xJf Python-3.6.0.tar.xz
+      - cd Python-3.6.0
+      - ./configure
+      - make
+      - make install
+      - cd ..
+      - rm -rf Python-3.6.0.tar.xz
+
+  build:
+    commands:
+      - python --version
+      - pip install npm
+      - npm install
+      - npm install -g serverless
+      - serverless deploy

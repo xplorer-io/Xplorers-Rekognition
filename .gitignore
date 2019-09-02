@@ -2,6 +2,8 @@ Notes
 .c9/
 .python-version
 .serverless/
+.vscode/
+readme.md
 node_modules/
 license/
-package-lock.json
+innovation.envrc
