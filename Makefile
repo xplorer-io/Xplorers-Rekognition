@@ -7,10 +7,10 @@ git_repo := $(shell env | grep GITHUB_REPO | cut -d "=" -f2)
 git_token := $(shell aws ssm get-parameter --name /github/sshkey --with-decryption --output text --query Parameter.Value)
 
 deploy-vpc:
-	$(info [+] Deploying 3 tier VPC...)
+	$(info [+] Deploying VPC for Codebuild to use...)
 	@aws cloudformation deploy \
-		--template-file cfn/3tier-vpc.yml \
-		--stack-name three-tier-vpc \
+		--template-file cfn/codebuild-vpc.yml \
+		--stack-name codebuild-vpc \
 		--capabilities CAPABILITY_NAMED_IAM
 
 deploy-pipeline:
@@ -25,7 +25,6 @@ deploy-pipeline:
 			GitHubOAuthToken=$(git_token) \
 			GitHubBranch=$(branch) \
 			S3ConfigBucket=$(CONFIG_BUCKET) \
-			NetworkStack=$(NETWORK_STACK) \
 			KnownBucket=$(KNOWN_BUCKET_NAME) \
 			UnknownBucket=$(UNKNOWN_BUCKET_NAME) \
 			RekogCollectionId=$(REKOGNITION_COLLECTION_ID) \
