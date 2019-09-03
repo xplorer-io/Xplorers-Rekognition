@@ -34,7 +34,6 @@ class LocalDisplay(Thread):
         results can be rendered using mplayer by typing:
         mplayer -demuxer lavf -lavfdopts format=mjpeg:probesize=32 /tmp/results.mjpeg
     """
-    start = time.time()
     def __init__(self, resolution):
         """ resolution - Desired resolution of the project stream """
         # Initialize the base class, so that the object can run on its own
@@ -89,6 +88,7 @@ class LocalDisplay(Thread):
 def greengrass_infinite_infer_run():
     """ Entry point of the lambda function"""
     try:
+        start = time.time()
         # This object detection model is implemented as single shot detector (ssd), since
         # the number of labels is small we create a dictionary that will help us convert
         # the machine labels to human readable labels.
@@ -210,7 +210,7 @@ def greengrass_infinite_infer_run():
             # Set the next frame in the local display stream.
             local_display.set_frame_data(frame)
             end = time.time()
-            print('{} - {} seconds'.format(end, start))
+            print('{} seconds'.format(end - start))
             # Send results to the cloud
 
             if cloud_output != {}:
@@ -220,3 +220,6 @@ def greengrass_infinite_infer_run():
         client.publish(topic=iot_topic, payload='Error in object detection lambda: {}'.format(ex))
 
 greengrass_infinite_infer_run()
+
+def function_handler(event, context):
+    return

@@ -5,7 +5,7 @@ import hashlib
 import os
 from urllib.parse import parse_qs
 
-bucket_name = os.environ['KNOWN_BUCKET_NAME']
+bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
 slack_token = os.environ['SLACK_API_TOKEN']
 slack_channel_id = os.environ['SLACK_CHANNEL_ID']
 slack_training_channel_id = os.environ['SLACK_TRAINING_CHANNEL_ID']

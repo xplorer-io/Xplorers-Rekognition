@@ -3,17 +3,12 @@ import boto3
 import requests
 import hashlib
 import os
-import datetime
-import subprocess
-import pygame
 
-bucket_name = os.environ['KNOWN_BUCKET_NAME']
+bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
 slack_token = os.environ['SLACK_API_TOKEN']
 slack_channel_id = os.environ['SLACK_CHANNEL_ID']
 slack_training_channel_id = os.environ['SLACK_TRAINING_CHANNEL_ID']
 rekognition_collection_id = os.environ['REKOGNITION_COLLECTION_ID']
-
-polly = boto3.client('polly')
 
 def guess(event, context):
     client = boto3.client('rekognition')
@@ -72,55 +67,9 @@ def guess(event, context):
         print(resp.json())
         username = resp.json()['user']['name']
         userid = resp.json()['user']['id']
-        if user_id == 'UG31DMHGB':
-            emp_name = 'Prasiddha'
-            print(f'You are {emp_name}')
-        elif user_id == 'UG47CJXQX':
-            emp_name = 'Bijay'
-            print(f'You are {emp_name}')
-        dt = datetime.datetime.now()
-        if dt.hour < 12:
-            greetingString = 'morning'
-        elif dt.hour < 18:
-            greetingString = 'afternoon'
-        elif dt.hour >= 18:
-            greetingString = 'evening'
-        message = '<speak>\n<prosody rate=\"medium\"><amazon:breath duration=\"long\" volume=\"soft\"/>Good ' + greetingString + ', Welcome to the Office ' + emp_name +' <amazon:breath duration=\"short\" volume=\"x-soft\"/></prosody>\n</speak>'
-        responsePolly = polly.synthesize_speech(
-			OutputFormat = 'mp3',
-			TextType = 'ssml',
-			Text = message,
-			VoiceId = 'Russell'
-		)
-        print(responsePolly)
-        ##############################################################
-        # mp3Key = emp_name + ".mp3"
-        # s3Client = boto3.client('s3')
-        # if "AudioStream" in responsePolly:
-        #     with closing(responsePolly["AudioStream"]) as stream:
-        #         try:
-        #             data = stream.read()
-        #             song = AudioSegment.from_file(io.BytesIO(data), format="mp3")
-        #             play(song)
-        #         except IOError as error:
-        #             print(error)
-        #             sys.exit(-1)
-        # sound1 = responsePolly['AudioStream'].read()
+        print(username)
+        print(userid)
 
-        # subprocess.run('play {}'.format(sound1),
-        #                          shell=True,
-        #                          check=True)
-        # pygame.init()
-        # pygame.mixer.init()
-        # pygame.mixer.music.load(sound1)
-        # pygame.mixer.music.play()
-        # s3Response = s3Client.put_object(
-        #     Bucket = 'audio-rekog-xplorers',
-        #     Key = mp3Key,
-        #     ACL = 'public-read',
-        #     Body = responsePolly['AudioStream'].read(),
-        #     ContentType = 'audio/mpeg'
-        # )
         if int(similarity) > 80:
             data = {
                 "channel": slack_channel_id,
