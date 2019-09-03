@@ -64,7 +64,7 @@ def play_mp3_greeting(user_name):
         # generate new mp3 with Polly
         mp3 = generate_mp3(user_name)
         with open(mp3_path, 'wb') as outfile:
-            outputFile.write(mp3['AudioStream'].read())
+            outfile.write(mp3['AudioStream'].read())
         
     os.system(f'/usr/bin/play {mp3_path}')
 
