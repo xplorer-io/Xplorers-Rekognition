@@ -29,30 +29,39 @@ Parameters:
 
   NetworkStack:
     Type: String
+    Description: VPC with a public subnet for codebuild to use - Stored in Parameter Store
 
   S3ConfigBucket:
     Type: String
+    Description: Artifacts bucket
 
   KnownBucket:
     Type: String
+    Description: S3 bucket that stores pictures of known people
 
   UnknownBucket:
     Type: String
+    Description: S3 bucket that stores pictures of unknown people
 
   RekogCollectionId:
     Type: String
+    Description: Rekognition Facial Recognition Collections Id
 
   SlackApiToken:
     Type: String
+    Description: API token derived from Slack Org
 
   SlackChannelId:
     Type: String
+    Description: Slack channel where pictures of known people are posted
 
   SlackTrainingChannel:
     Type: String
+    Description: Slack channel where pictures of unknown people are posted and can be trained from Slack
 
   AccountNumber:
     Type: String
+    Description: The AWS Account in use
 
 Resources:
   PipelineArtifactsBucket:
@@ -170,15 +179,31 @@ Resources:
   CodePipelineRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: codepipeline.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess #TODO: Reduce permissions
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": { "Service": [ "codepipeline.amazonaws.com" ]},
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        }
+      Policies:
+        - PolicyName: !Sub iam-${GitHubBranch}-CodePipelinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuilds
+                  - iam:PassRole
+                Resource: '*'
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
