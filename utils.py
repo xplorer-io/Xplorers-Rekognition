@@ -23,10 +23,10 @@ def verify_users(face_data):
     """
     user_id = face_data['FaceMatches'][0]['Face']['ExternalImageId']
     if user_id == 'UG31DMHGB':
-        return emp_name == 'Prasiddha'
+        return 'Prasiddha'
         # print('You are {}'.format(emp_name))
     elif user_id == 'UG47CJXQX':
-        return emp_name == 'Bijay'
+        return 'Bijay'
         # print('You are {}'.format(emp_name))    
         
 def generate_mp3(user_name):
@@ -57,7 +57,7 @@ def play_mp3_greeting(user_name):
     Checks if an mp3 file exists for a given user,
     creates it if there is none, then plays it
     """
-    mp3_path = f'/tmp/static-files/{user_name}.mp3'
+    mp3_path = '/tmp/static-files/{}.mp3'.format(user_name)
 
     if not os.path.exists(mp3_path):
         # Unable to find existing greeting for this user, so
@@ -66,7 +66,7 @@ def play_mp3_greeting(user_name):
         with open(mp3_path, 'wb') as outfile:
             outfile.write(mp3['AudioStream'].read())
         
-    os.system(f'/usr/bin/play {mp3_path}')
+    os.system('/usr/bin/play {}'.format(mp3_path))
 
 # def play_mp3_files():
 #     if os.path.exists('/tmp/static-files/{}.mp3'.format(user)):

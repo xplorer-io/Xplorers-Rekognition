@@ -58,7 +58,9 @@ provider:
 
 # you can define service wide environment variables here
   environment:
-    BUCKET_NAME: ${env:KNOWN_BUCKET_NAME}
+    BUCKET_NAME: ${env:UNKNOWN_BUCKET_NAME}
+    KNOWN_BUCKET_NAME: ${env:KNOWN_BUCKET_NAME}
+    UNKNOWN_BUCKET_NAME: ${env:UNKNOWN_BUCKET_NAME}
     SLACK_API_TOKEN: ${env:SLACK_API_TOKEN}
     SLACK_CHANNEL_ID: ${env:SLACK_CHANNEL_ID}
     SLACK_TRAINING_CHANNEL_ID: ${env:SLACK_TRAINING_CHANNEL_ID}
@@ -117,8 +119,8 @@ functions:
     handler: handler.unknown
     events:
       - s3:
-          bucket: ${env:KNOWN_BUCKET_NAME}
-          event: s3:ObjectCreated:Copy
+          bucket: ${env:UNKNOWN_BUCKET_NAME}
+          event: s3:ObjectCreated:*
           rules:
             - prefix: unknown/
   train:
