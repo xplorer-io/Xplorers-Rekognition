@@ -15,8 +15,8 @@ rekognition_collection_id = os.environ['REKOGNITION_COLLECTION_ID']
 
 def unknown(event, context):
     key = event['Records'][0]['s3']['object']['key']
-    presign_get_object_from_s3(bucket_name, key)
-    send_sns_notification(presign_get_object_from_s3)
+    get_url = presign_get_object_from_s3(bucket_name, key)
+    send_sns_notification(get_url)
     data = {
         "channel": slack_training_channel_id,
         "text": "I don't know who this is, can you tell me?",
