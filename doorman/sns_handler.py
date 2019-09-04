@@ -21,6 +21,9 @@ def presign_get_object_from_s3(bucket, key, expiration=3600, client=None):
     return response
 
 def send_sns_notification(signed_url):
+    """
+    Send notification to the admins on findings from Deeplens
+    """
     subject = 'Alert! Unknown person detected at the Office.'
     message = f'An unknown person detected on arrival at the office, here\'s a picture of the person, {signed_url}'
     client = boto3.client('sns')
