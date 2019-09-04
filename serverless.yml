@@ -41,6 +41,11 @@ provider:
        - "s3:DeleteObject"
       Resource:
         - "arn:aws:s3:::${env:KNOWN_BUCKET_NAME}/*"
+    - Effect: "Allow"
+      Action:
+        - "SNS:Publish"
+      Resource:
+        - "arn:aws:sns:us-east-1:${env:AWS_ACCOUNT_NUMBER}:*"
 
  #   - Effect: "Allow"
  #     Action:
