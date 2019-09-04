@@ -1,0 +1,35 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Topic for notifications to be sent out when triggered by Deeplens Lambda'
+Parameters:
+  GithubBranch:
+    Type: String
+    Default: master
+
+  AdminPhoneNumber:
+    Type: String
+    Default: '9999999'
+    
+  AdminEmail:
+    Type: String
+    Default: 'xxxx@gmail.com'
+
+Resources:
+  UnknownPersonSnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: !Sub 'xplorers-rekognition-deploy-${GithubBranch}-sns-topic'
+      TopicName: !Sub 'xplorers-rekognition-deploy-${GithubBranch}-sns-topic'
+      Subscription:
+        - Endpoint: !Ref AdminPhoneNumber
+          Protocol: sms
+        - Endpoint: !Ref AdminEmail
+          Protocol: email
+
+Outputs:
+  UnknownPersonSnsTopic:
+    Description: The topic that sends notification to the admins when unknown people are seen by DeepLens
+    Value: !Ref UnknownPersonSnsTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-deploy'
+

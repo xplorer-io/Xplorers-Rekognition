@@ -34,3 +34,15 @@ deploy-pipeline:
 			SlackTrainingChannel=$(SLACK_TRAINING_CHANNEL_ID) \
 			AccountNumber=$(AWS_ACCOUNT_NUMBER)
 .PHONY: deploy-pipeline
+
+deploy-sns:
+	$(info [+] Deploying SNS stack for Xplorers...)
+	@aws cloudformation deploy \
+		--template-file cfn/sns-topic.yml \
+		--stack-name xplorers-snstopic-$(branch) \
+		--capabilities CAPABILITY_NAMED_IAM \
+		--no-fail-on-empty-changeset \
+		--parameter-overrides \
+			GitHubBranch=$(branch) \
+			AdminPhoneNumber=$(ADMIN_CONTACT_NUMBER) \
+			AdminEmail=$(ADMIN_EMAIL)

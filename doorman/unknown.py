@@ -4,6 +4,7 @@ import requests
 import hashlib
 import os
 from urllib.parse import parse_qs
+from .sns_handler import presign_get_object_from_s3, send_sns_notification
 
 bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
 slack_token = os.environ['SLACK_API_TOKEN']
@@ -14,7 +15,8 @@ rekognition_collection_id = os.environ['REKOGNITION_COLLECTION_ID']
 
 def unknown(event, context):
     key = event['Records'][0]['s3']['object']['key']
-
+    presign_get_object_from_s3(bucket_name, key)
+    send_sns_notification(presign_get_object_from_s3)
     data = {
         "channel": slack_training_channel_id,
         "text": "I don't know who this is, can you tell me?",
