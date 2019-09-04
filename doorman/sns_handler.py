@@ -1,4 +1,7 @@
 import boto3
+import os
+
+sns_arn = os.environ['SNS_TOPIC_ARN']
 
 def presign_get_object_from_s3(bucket, key, expiration=3600, client=None):
     """
@@ -22,7 +25,7 @@ def send_sns_notification(signed_url):
     message = f'An unknown person detected on arrival at the office, here\'s a picture of the person, {signed_url}'
     client = boto3.client('sns')
     response = client.publish(
-        TopicArn='xplorers-rekognition-deploy-master-sns-topic',
+        TopicArn=sns_arn,
         Message=message,
         Subject=subject
         #MessageStructure='string'

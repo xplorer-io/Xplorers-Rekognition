@@ -63,6 +63,10 @@ Parameters:
     Type: String
     Description: The AWS Account in use
 
+  SnsArn:
+    Type: String
+    Description: SNS Topic ARN in use
+
 Resources:
   PipelineArtifactsBucket:
     Type: AWS::S3::Bucket
@@ -140,7 +144,9 @@ Resources:
           - Name: SLACK_TRAINING_CHANNEL_ID
             Value: !Ref SlackTrainingChannel
           - Name: AWS_ACCOUNT_NUMBER
-            Value: !Ref AccountNumber                       
+            Value: !Ref AccountNumber
+          - Name: SNS_TOPIC_ARN
+            Value: !Ref SnsArn               
           - Name: BUILD_SUBNET_ID
             Value:
               Fn::ImportValue: !Sub ${NetworkStack}-SubnetPrivateA

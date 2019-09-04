@@ -32,7 +32,8 @@ deploy-pipeline:
 			SlackApiToken=$(SLACK_API_TOKEN) \
 			SlackChannelId=$(SLACK_CHANNEL_ID) \
 			SlackTrainingChannel=$(SLACK_TRAINING_CHANNEL_ID) \
-			AccountNumber=$(AWS_ACCOUNT_NUMBER)
+			AccountNumber=$(AWS_ACCOUNT_NUMBER) \
+			SnsArn=$(TOPIC_ARN)
 .PHONY: deploy-pipeline
 
 deploy-sns:
