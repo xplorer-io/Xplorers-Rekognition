@@ -3,12 +3,14 @@ import boto3
 import requests
 import hashlib
 import os
+from .dynamo_utils import RekognitionKnown, update_dynamo
 
 bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
 slack_token = os.environ['SLACK_API_TOKEN']
 slack_channel_id = os.environ['SLACK_CHANNEL_ID']
 slack_training_channel_id = os.environ['SLACK_TRAINING_CHANNEL_ID']
 rekognition_collection_id = os.environ['REKOGNITION_COLLECTION_ID']
+image_bucket = os.environ['KNOWN_BUCKET_NAME']
 
 def guess(event, context):
     client = boto3.client('rekognition')
@@ -49,31 +51,36 @@ def guess(event, context):
         print ("Face found")
         print (resp)
         user_id = resp['FaceMatches'][0]['Face']['ExternalImageId']
-        similarity = resp['FaceMatches'][0]['Similarity']
+        match_percentage = resp['FaceMatches'][0]['Similarity']
+        image_id = resp['FaceMatches'][0]['Face']['ImageId']
         # move image
         new_key = 'detected/%s/%s.jpg' % (user_id, hashlib.md5(key.encode('utf-8')).hexdigest())
+        #Get the object key for generating url
+        dynamo_key = '%s.jpg' % (hashlib.md5(key.encode('utf-8')).hexdigest())
         s3.Object(bucket_name, new_key).copy_from(CopySource='%s/%s' % (event_bucket_name, key))
         s3.ObjectAcl(bucket_name, new_key).put(ACL='public-read')
-        s3.Object(bucket_name, key).delete()
-
+        #This is the object url of the captured picture
+        url = f'https://{image_bucket}.s3.amazonaws.com/{key}'
+        
         # fetch the username for this user_id
         data = {
             "token": slack_token,
             "user": user_id
         }
-        print(data)
+
         resp = requests.post("https://slack.com/api/users.info", data=data)
         print(resp.content)
-        print(resp.json())
-        username = resp.json()['user']['name']
+        # print(resp.json())
+        username = resp.json()['user']['real_name']
         userid = resp.json()['user']['id']
-        print(username)
-        print(userid)
+        
+        # Update Dynamo with details of known person
+        update_dynamo(username, userid, match_percentage, image_id, url)
 
-        if int(similarity) > 80:
+        if int(match_percentage) > 80:
             data = {
                 "channel": slack_channel_id,
-                "text": "Matched: {} (Similarity: {:.2f}%)".format(username, similarity),
+                "text": "Matched: {} (Similarity: {:.2f}%)".format(username, match_percentage),
                 "link_names": True,
                 "attachments": [
                     {
@@ -88,7 +95,7 @@ def guess(event, context):
 
         data = {
             "channel": slack_training_channel_id,
-            "text": "Matched: {} (Similarity: {:.2f}%)".format(username, similarity),
+            "text": "Matched: {} (Similarity: {:.2f}%)".format(username, match_percentage),
             "link_names": True,
             "attachments": [
                 {

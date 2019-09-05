@@ -25,7 +25,7 @@ def send_sns_notification(signed_url):
     Send notification to the admins on findings from Deeplens
     """
     subject = 'Alert! Unknown person detected at the Office.'
-    message = f'An unknown person detected on arrival at the office, here\'s a picture of the person, {signed_url}'
+    message = f'An unknown person detected at the office, here\'s a picture of the person, {signed_url}'
     client = boto3.client('sns')
     response = client.publish(
         TopicArn=sns_arn,

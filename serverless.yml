@@ -46,6 +46,14 @@ provider:
         - "SNS:Publish"
       Resource:
         - "arn:aws:sns:us-east-1:${env:AWS_ACCOUNT_NUMBER}:*"
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:Describe*
+      Resource:
+        - "arn:aws:dynamodb:us-east-1:${env:AWS_ACCOUNT_NUMBER}:table/deeplens-known-faces"
+        - "arn:aws:dynamodb:us-east-1:${env:AWS_ACCOUNT_NUMBER}:table/deeplens-unknown-faces"
+
 
  #   - Effect: "Allow"
  #     Action:
@@ -87,7 +95,7 @@ resources:
     UnknownFacesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: 'unknown-faces'
+        TableName: 'deeplens-unknown-faces'
         AttributeDefinitions:
           - AttributeName: RekognitionId
             AttributeType: S
@@ -101,13 +109,17 @@ resources:
     KnownFacesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: 'known-faces'
+        TableName: 'deeplens-known-faces'
         AttributeDefinitions:
-          - AttributeName: PersonId
+          - AttributeName: user_name
+            AttributeType: S
+          - AttributeName: slack_user_id
             AttributeType: S
         KeySchema:
-          - AttributeName: PersonId
+          - AttributeName: user_name
             KeyType: HASH
+          - AttributeName: slack_user_id
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5

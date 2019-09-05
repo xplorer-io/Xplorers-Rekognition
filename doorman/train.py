@@ -41,7 +41,7 @@ def train(event, context):
             json=message
         )
         s3 = boto3.resource('s3')
-        s3.Object(bucket_name, key).delete()
+        #s3.Object(bucket_name, key).delete()
 
     if data['actions'][0]['name'] == 'username':
 

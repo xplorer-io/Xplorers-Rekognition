@@ -11,6 +11,8 @@ requests = "*"
 boto3 = "*"
 awscli = "*"
 serverless = "*"
+pynamodb = "*"
+pytz = "*"
 
 [requires]
 python_version = "3.6"
