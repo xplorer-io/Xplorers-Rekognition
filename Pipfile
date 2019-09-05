@@ -11,8 +11,6 @@ requests = "*"
 boto3 = "*"
 awscli = "*"
 serverless = "*"
-pygame = "*"
-pydub = "*"
 
 [requires]
 python_version = "3.6"

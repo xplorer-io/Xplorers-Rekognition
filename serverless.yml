@@ -41,6 +41,11 @@ provider:
        - "s3:DeleteObject"
       Resource:
         - "arn:aws:s3:::${env:KNOWN_BUCKET_NAME}/*"
+    - Effect: "Allow"
+      Action:
+        - "SNS:Publish"
+      Resource:
+        - "arn:aws:sns:us-east-1:${env:AWS_ACCOUNT_NUMBER}:*"
 
  #   - Effect: "Allow"
  #     Action:
@@ -65,6 +70,7 @@ provider:
     SLACK_CHANNEL_ID: ${env:SLACK_CHANNEL_ID}
     SLACK_TRAINING_CHANNEL_ID: ${env:SLACK_TRAINING_CHANNEL_ID}
     REKOGNITION_COLLECTION_ID: ${env:REKOGNITION_COLLECTION_ID}
+    SNS_TOPIC_ARN: ${env:SNS_TOPIC_ARN}
 
 
 package:
