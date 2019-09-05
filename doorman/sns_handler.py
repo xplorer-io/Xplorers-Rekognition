@@ -31,12 +31,4 @@ def send_sns_notification(signed_url):
         TopicArn=sns_arn,
         Message=message,
         Subject=subject
-        #MessageStructure='string'
-        # MessageAttributes={
-        #     'string': {
-        #         'DataType': 'string',
-        #         'StringValue': 'string',
-        #         'BinaryValue': b'bytes'
-        #     }
-        #}
     )
