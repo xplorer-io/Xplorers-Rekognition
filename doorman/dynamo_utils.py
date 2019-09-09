@@ -73,7 +73,7 @@ def update_dynamo(match_percentage, image_id, url):
     
     put_into_dynamo = RekognitionUnKnown(
         ##user_name = username,
-        slack_user_id = userid,
+        #slack_user_id = userid,
         match_percentage = round(match_percentage),
         image_id = image_id,
         image_url = url
