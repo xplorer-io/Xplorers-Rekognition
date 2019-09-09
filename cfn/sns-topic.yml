@@ -18,8 +18,8 @@ Resources:
   UnknownPersonSnsTopic:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: !Sub 'xplorers-rekognition-deploy-${GithubBranch}-sns-topic'
-      TopicName: !Sub 'xplorers-rekognition-deploy-${GithubBranch}-sns-topic'
+      DisplayName: 'Alert-Notification-Unknown-Person-Detected'
+      TopicName: 'Sns-Topic-Deeplens-Alert'
       Subscription:
         - Endpoint: !Ref AdminPhoneNumber
           Protocol: sms
