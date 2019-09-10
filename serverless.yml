@@ -95,12 +95,12 @@ resources:
     UnknownFacesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: 'deeplens-unknown-faces'
+        TableName: 'dl-unknown-faces'
         AttributeDefinitions:
-          - AttributeName: RekognitionId
+          - AttributeName: image_id
             AttributeType: S
         KeySchema:
-          - AttributeName: RekognitionId
+          - AttributeName: image_id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
@@ -109,7 +109,7 @@ resources:
     KnownFacesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: 'deeplens-known-faces'
+        TableName: 'dl-known-faces'
         AttributeDefinitions:
           - AttributeName: user_name
             AttributeType: S

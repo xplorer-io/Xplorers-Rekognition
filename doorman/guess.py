@@ -41,11 +41,16 @@ def guess(event, context):
 
     if len(resp['FaceMatches']) == 0:
         # no known faces detected, let the users decide in slack
+        print("Getting Unkown persons Data")
+        image_id = resp['FaceMatches'][0]['Face']['ImageId']
+        url = f'https://{image_bucket}.s3.amazonaws.com/{key}'
+        #Update unknown dynamodb
+        update_unkown_dynamo(image_id, url)
         print("No matches found, sending to unknown")
         new_key = 'unknown/%s.jpg' % hashlib.md5(key.encode('utf-8')).hexdigest()
         s3.Object(bucket_name, new_key).copy_from(CopySource='%s/%s' % (event_bucket_name, key))
         s3.ObjectAcl(bucket_name, new_key).put(ACL='public-read')
-        s3.Object(bucket_name, key).delete()
+        #s3.Object(bucket_name, key).delete()
         return
     else:
         print ("Face found")
