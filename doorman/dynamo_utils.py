@@ -66,7 +66,7 @@ class RekognitionUnKnown(Model):
     image_url = UnicodeAttribute(null=False)
     # sentiment analysis = ???
     
-def update_dynamo(match_percentage, image_id, url):
+def update_unkown_dynamo(match_percentage, image_id, url):
     """
     This function updates unknown-faces dynamo table
     """

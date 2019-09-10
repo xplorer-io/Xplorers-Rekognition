@@ -3,7 +3,7 @@ import boto3
 import requests
 import hashlib
 import os
-from .dynamo_utils import RekognitionKnown, update_dynamo
+from .dynamo_utils import RekognitionKnown, update_dynamo , update_unkown_dynamo, RekognitionUnKnown
 
 bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
 slack_token = os.environ['SLACK_API_TOKEN']
