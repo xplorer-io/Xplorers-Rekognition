@@ -4,7 +4,7 @@ import pytz
 from boto3 import session
 from pynamodb.models import Model
 from pynamodb.constants import STRING
-from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, NumberAttribute
+from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute, BooleanAttribute
 
 class RekognitionKnown(Model):
     """
@@ -23,22 +23,36 @@ class RekognitionKnown(Model):
     
     user_name = UnicodeAttribute(hash_key=True)
     slack_user_id = UnicodeAttribute(range_key=True)
-    match_percentage = NumberAttribute(null=False)
+    match_percentage = UnicodeAttribute(null=False)
     image_id = UnicodeAttribute(null=False)
     captured_at = UnicodeAttribute(default=time_now)
     image_url = UnicodeAttribute(null=False)
-    # sentiment analysis = ???
-    
-def update_dynamo(username, userid, match_percentage, image_id, url):
+    age_range = UnicodeAttribute(null=False)
+    gender = UnicodeAttribute(null=False)
+    is_smiling = BooleanAttribute(null=False)
+    has_beard = BooleanAttribute(null=False)
+    is_happy = UnicodeAttribute(null=False)
+    is_sad = UnicodeAttribute(null=False)
+    is_angry = UnicodeAttribute(null=False)
+
+def update_dynamo(username, userid, match_percentage, image_id, url, \
+    age, gender, smile, beard, happy, sad, angry):
     """
-    This function updates known-faces dynamo table with the data derived from Slack and Rekognition
+    This function updates known-faces dynamo table with the data derived from Slack and AWS Rekognition
     """
     
     put_into_dynamo = RekognitionKnown(
         user_name = username,
         slack_user_id = userid,
-        match_percentage = round(match_percentage),
+        match_percentage = match_percentage,
         image_id = image_id,
-        image_url = url
+        image_url = url,
+        age_range = age,
+        gender = gender,
+        is_smiling = smile,
+        has_beard = beard,
+        is_happy = happy,
+        is_sad = sad,
+        is_angry = angry
     )
     put_into_dynamo.save()
