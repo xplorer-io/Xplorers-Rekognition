@@ -4,6 +4,7 @@ import requests
 import hashlib
 import os
 from .dynamo_utils import RekognitionKnown, update_dynamo
+from .faces_emotions import compare_faces, detect_faces
 
 bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
 slack_token = os.environ['SLACK_API_TOKEN']
@@ -13,7 +14,6 @@ rekognition_collection_id = os.environ['REKOGNITION_COLLECTION_ID']
 image_bucket = os.environ['KNOWN_BUCKET_NAME']
 
 def guess(event, context):
-    client = boto3.client('rekognition')
     key = event['Records'][0]['s3']['object']['key']
     event_bucket_name = event['Records'][0]['s3']['bucket']['name']
     image = {
@@ -27,11 +27,11 @@ def guess(event, context):
     s3 = boto3.resource('s3') 
 
     try:
-        resp = client.search_faces_by_image(
-            CollectionId=rekognition_collection_id,
-            Image=image,
-            MaxFaces=1,
-            FaceMatchThreshold=70)
+        evaluate_face_match = compare_faces(rekognition_collection_id, image)
+        print(evaluate_face_match)
+        
+        gather_emotions = detect_faces(event_bucket_name, key)
+        print(gather_emotions)
 
     except Exception as ex:
         # no faces detected, delete image
@@ -39,7 +39,7 @@ def guess(event, context):
         s3.Object(bucket_name, key).delete()
         return
 
-    if len(resp['FaceMatches']) == 0:
+    if len(evaluate_face_match['FaceMatches']) == 0:
         # no known faces detected, let the users decide in slack
         print("No matches found, sending to unknown")
         new_key = 'unknown/%s.jpg' % hashlib.md5(key.encode('utf-8')).hexdigest()
@@ -49,10 +49,9 @@ def guess(event, context):
         return
     else:
         print ("Face found")
-        print (resp)
-        user_id = resp['FaceMatches'][0]['Face']['ExternalImageId']
-        match_percentage = resp['FaceMatches'][0]['Similarity']
-        image_id = resp['FaceMatches'][0]['Face']['ImageId']
+        user_id = evaluate_face_match['FaceMatches'][0]['Face']['ExternalImageId']
+        match_percentage = round(evaluate_face_match['FaceMatches'][0]['Similarity'])
+        image_id = evaluate_face_match['FaceMatches'][0]['Face']['ImageId']
         # move image
         new_key = 'detected/%s/%s.jpg' % (user_id, hashlib.md5(key.encode('utf-8')).hexdigest())
         #Get the object key for generating url
@@ -71,11 +70,34 @@ def guess(event, context):
         resp = requests.post("https://slack.com/api/users.info", data=data)
         print(resp.content)
         # print(resp.json())
+        
+        # Known Person Details for Dynamo Records 
         username = resp.json()['user']['real_name']
         userid = resp.json()['user']['id']
+        age_range = gather_emotions[0]['AgeRange']
+        age = '{Low}-{High}'.format(**age_range)
+        gender = gather_emotions[0]['Gender']['Value']
+        smile = gather_emotions[0]['Smile']['Value']
+        beard = gather_emotions[0]['Beard']['Value']
+        
+        emotions_list = gather_emotions[0]['Emotions']
+        # The order of output for emotions from Rekognition is not always 
+        # the same, so get specific emotion details
+        for item in emotions_list:
+            if item['Type'] == 'HAPPY':
+                happiness_confidence = round(item['Confidence'], 2) # round to 2 numbers after decimal
+            elif item['Type'] == 'SAD':
+                sadness_confidence = round(item['Confidence'], 2)
+            elif item['Type'] == 'ANGRY':
+                angry_confidence = round(item['Confidence'], 2)  
+        
+        print(f'Printing Happy {happiness_confidence}')
+        print(f'Printing Sad {sadness_confidence}')
+        print(f'Printing Angry {angry_confidence}')
         
         # Update Dynamo with details of known person
-        update_dynamo(username, userid, match_percentage, image_id, url)
+        update_dynamo(username, userid, f'{match_percentage}%', image_id, \
+            url, age, gender, smile, beard, f'{happiness_confidence}%', f'{sadness_confidence}%', f'{angry_confidence}%')
 
         if int(match_percentage) > 80:
             data = {
