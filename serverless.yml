@@ -97,10 +97,10 @@ resources:
       Properties:
         TableName: 'deeplens-unknown-faces'
         AttributeDefinitions:
-          - AttributeName: RekognitionId
+          - AttributeName: image_url
             AttributeType: S
         KeySchema:
-          - AttributeName: RekognitionId
+          - AttributeName: image_url
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
