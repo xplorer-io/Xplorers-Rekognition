@@ -3,7 +3,7 @@ import boto3
 import requests
 import hashlib
 import os
-from .dynamo_utils import RekognitionKnown, update_dynamo
+from .dynamo_utils import update_dynamo, update_unknown_dynamo
 from .faces_emotions import compare_faces, detect_faces
 
 bucket_name = os.environ['UNKNOWN_BUCKET_NAME']
@@ -26,18 +26,31 @@ def guess(event, context):
 
     s3 = boto3.resource('s3') 
 
-    try:
-        evaluate_face_match = compare_faces(rekognition_collection_id, image)
-        print(evaluate_face_match)
-        
-        gather_emotions = detect_faces(event_bucket_name, key)
-        print(gather_emotions)
-
-    except Exception as ex:
-        # no faces detected, delete image
-        print("No faces found, deleting")
-        s3.Object(bucket_name, key).delete()
-        return
+    evaluate_face_match = compare_faces(rekognition_collection_id, image)
+    print(evaluate_face_match)
+    url = f'https://{image_bucket}.s3.amazonaws.com/{key}' #This is the object url of the captured picture
+    gather_emotions = detect_faces(event_bucket_name, key)
+    print(gather_emotions)
+    age_range = gather_emotions[0]['AgeRange']
+    age = '{Low}-{High}'.format(**age_range)
+    gender = gather_emotions[0]['Gender']['Value']
+    smile = gather_emotions[0]['Smile']['Value']
+    beard = gather_emotions[0]['Beard']['Value']
+    
+    emotions_list = gather_emotions[0]['Emotions']
+    # The order of output for emotions from Rekognition is not always 
+    # the same, so get specific emotion details
+    for item in emotions_list:
+        if item['Type'] == 'HAPPY':
+            happiness_confidence = round(item['Confidence'], 2) # round to 2 numbers after decimal
+        elif item['Type'] == 'SAD':
+            sadness_confidence = round(item['Confidence'], 2)
+        elif item['Type'] == 'ANGRY':
+            angry_confidence = round(item['Confidence'], 2)  
+    
+    print(f'Printing Happy {happiness_confidence}')
+    print(f'Printing Sad {sadness_confidence}')
+    print(f'Printing Angry {angry_confidence}')
 
     if len(evaluate_face_match['FaceMatches']) == 0:
         # no known faces detected, let the users decide in slack
@@ -45,6 +58,9 @@ def guess(event, context):
         new_key = 'unknown/%s.jpg' % hashlib.md5(key.encode('utf-8')).hexdigest()
         s3.Object(bucket_name, new_key).copy_from(CopySource='%s/%s' % (event_bucket_name, key))
         s3.ObjectAcl(bucket_name, new_key).put(ACL='public-read')
+        # Update Dynamo with details of unknown person
+        update_unknown_dynamo(url, age, gender, smile, \
+            beard, f'{happiness_confidence}%', f'{sadness_confidence}%', f'{angry_confidence}%')
         s3.Object(bucket_name, key).delete()
         return
     else:
@@ -52,14 +68,13 @@ def guess(event, context):
         user_id = evaluate_face_match['FaceMatches'][0]['Face']['ExternalImageId']
         match_percentage = round(evaluate_face_match['FaceMatches'][0]['Similarity'])
         image_id = evaluate_face_match['FaceMatches'][0]['Face']['ImageId']
+
         # move image
         new_key = 'detected/%s/%s.jpg' % (user_id, hashlib.md5(key.encode('utf-8')).hexdigest())
         #Get the object key for generating url
         dynamo_key = '%s.jpg' % (hashlib.md5(key.encode('utf-8')).hexdigest())
         s3.Object(bucket_name, new_key).copy_from(CopySource='%s/%s' % (event_bucket_name, key))
         s3.ObjectAcl(bucket_name, new_key).put(ACL='public-read')
-        #This is the object url of the captured picture
-        url = f'https://{image_bucket}.s3.amazonaws.com/{key}'
         
         # fetch the username for this user_id
         data = {
@@ -74,26 +89,6 @@ def guess(event, context):
         # Known Person Details for Dynamo Records 
         username = resp.json()['user']['real_name']
         userid = resp.json()['user']['id']
-        age_range = gather_emotions[0]['AgeRange']
-        age = '{Low}-{High}'.format(**age_range)
-        gender = gather_emotions[0]['Gender']['Value']
-        smile = gather_emotions[0]['Smile']['Value']
-        beard = gather_emotions[0]['Beard']['Value']
-        
-        emotions_list = gather_emotions[0]['Emotions']
-        # The order of output for emotions from Rekognition is not always 
-        # the same, so get specific emotion details
-        for item in emotions_list:
-            if item['Type'] == 'HAPPY':
-                happiness_confidence = round(item['Confidence'], 2) # round to 2 numbers after decimal
-            elif item['Type'] == 'SAD':
-                sadness_confidence = round(item['Confidence'], 2)
-            elif item['Type'] == 'ANGRY':
-                angry_confidence = round(item['Confidence'], 2)  
-        
-        print(f'Printing Happy {happiness_confidence}')
-        print(f'Printing Sad {sadness_confidence}')
-        print(f'Printing Angry {angry_confidence}')
         
         # Update Dynamo with details of known person
         update_dynamo(username, userid, f'{match_percentage}%', image_id, \
