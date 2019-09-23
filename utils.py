@@ -63,10 +63,12 @@ def play_mp3_greeting(user_name):
         # Unable to find existing greeting for this user, so
         # generate new mp3 with Polly
         mp3 = generate_mp3(user_name)
-        with open(mp3_path, 'wb') as outfile:
+        with open(mp3_path, 'w+') as outfile:
             outfile.write(mp3['AudioStream'].read())
-        
-    os.system('/usr/bin/play {}'.format(mp3_path))
+            outfile.close()
+            os.system('/usr/bin/play {}'.format(mp3_path))
+    else:
+        os.system('/usr/bin/play {}'.format(mp3_path))
 
 # def play_mp3_files():
 #     if os.path.exists('/tmp/static-files/{}.mp3'.format(user)):
