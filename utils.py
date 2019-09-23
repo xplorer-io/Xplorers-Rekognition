@@ -57,7 +57,7 @@ def play_mp3_greeting(user_name):
     Checks if an mp3 file exists for a given user,
     creates it if there is none, then plays it
     """
-    mp3_path = 'tmp/static-files/{}.mp3'.format(user_name)
+    mp3_path = '/home/aws_cam/tmp/static-files/{}.mp3'.format(user_name)
 
     if not os.path.exists(mp3_path):
         # Unable to find existing greeting for this user, so
