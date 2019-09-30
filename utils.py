@@ -57,7 +57,7 @@ def play_mp3_greeting(user_name):
     Checks if an mp3 file exists for a given user,
     creates it if there is none, then plays it
     """
-    mp3_path = '/home/aws_cam/tmp/static-files/{}.mp3'.format(user_name)
+    mp3_path = '/tmp/{}.mp3'.format(user_name)
 
     if not os.path.exists(mp3_path):
         # Unable to find existing greeting for this user, so
@@ -69,12 +69,3 @@ def play_mp3_greeting(user_name):
             os.system('/usr/bin/play {}'.format(mp3_path))
     else:
         os.system('/usr/bin/play {}'.format(mp3_path))
-
-# def play_mp3_files():
-#     if os.path.exists('/tmp/static-files/{}.mp3'.format(user)):
-#         os.system('/usr/bin/play /tmp/static-files/{}.mp3'.format(user))
-#     else:       
-#         outputFile = open('/tmp/static-files/{}.mp3'.format(user), 'wb')
-#         outputFile.write(responsePolly['AudioStream'].read())
-#         outputFile.close()
-#         os.system('/usr/bin/play /tmp/static-files/{}.mp3'.format(user))
