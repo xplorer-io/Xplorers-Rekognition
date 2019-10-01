@@ -8,7 +8,7 @@ This repository holds the source code for a serverless stack that uses AWS Nativ
 
 # What really happens here?
 
-- When a person is detected by DeepLens, it uploads a picture of the person to an S3 bucket which triggers a lambda function (Guess Lambda) that interacts with AWS Rekognition to identify the person in the picture.
+- When a person is detected by DeepLens, it uploads a picture of the person to an S3 bucket which triggers a lambda function that interacts with AWS Rekognition to identify the person in the picture.
 - Upon recognising the person, a notification is sent to Slack with the picture of the person and DynamoDb is updated with the user details including emotional analysis.
 - If the person is not recognised, the picture is still sent to Slack for admins to verify if the person is actually unknown. The admin can choose who the user is via Slack which triggers API Gateway to train AWS Rekognition on who the person is. If ignored, the photo will be deleted. Also everytime an unknown person is detected, details about the person like emotions and age-range are updated in DynamoDb database.
 - A notification alert with the picture of the person is sent to the admins via phone and email when an unknown person is detected.
