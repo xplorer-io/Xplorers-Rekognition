@@ -1,10 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
-# *** Change this to something useful for you!
 Description: Xplorers-Pipeline
 
 Parameters:
-  # *** This value must always be passed in when creating / updating stack
-  # "NoEcho" is set to true, for security, so token won't be visible when examining the resulting stack
   GitHubOAuthToken:
     Type: String
     Description: Github PAT
@@ -146,7 +143,7 @@ Resources:
           - Name: AWS_ACCOUNT_NUMBER
             Value: !Ref AccountNumber
           - Name: SNS_TOPIC_ARN
-            Value: !Ref SnsArn               
+            Value: !Ref SnsArn
           - Name: BUILD_SUBNET_ID
             Value:
               Fn::ImportValue: !Sub ${NetworkStack}-SubnetPrivateA
@@ -157,7 +154,7 @@ Resources:
             Value: !Ref S3ConfigBucket
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       VpcConfig:
-        VpcId: 
+        VpcId:
           Fn::ImportValue: !Sub ${NetworkStack}-VPCID
         Subnets:
           - Fn::ImportValue: !Sub ${NetworkStack}-SubnetPrivateA
@@ -165,9 +162,7 @@ Resources:
         SecurityGroupIds:
           - !Ref PipelineSecurityGroup
 
-  # 'GithubWebhook' satisfies two requirements:
-  # -- Means that updates are pushed from GitHub, rather than AWS having to poll
-  # -- Means we can filter for required changes
+  # -- Updates are pushed from GitHub, rather than AWS having to poll
   GithubWebhook:
     Type: 'AWS::CodePipeline::Webhook'
     Properties:

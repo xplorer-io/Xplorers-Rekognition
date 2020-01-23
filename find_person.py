@@ -88,7 +88,6 @@ class LocalDisplay(Thread):
 def greengrass_infinite_infer_run():
     """ Entry point of the lambda function"""
     try:
-        start = time.time()
         # This object detection model is implemented as single shot detector (ssd), since
         # the number of labels is small we create a dictionary that will help us convert
         # the machine labels to human readable labels.
@@ -180,7 +179,7 @@ def greengrass_infinite_infer_run():
                                 # rfr = cv2.resize(frame, (672, 380))
 
                                 face_data = utils.compare_faces(rekognition_collection_id, jpg_data)
-                                
+
                                 user_name = utils.verify_users(face_data)
 
                                 utils.play_mp3_greeting(user_name)
@@ -209,10 +208,8 @@ def greengrass_infinite_infer_run():
                     cloud_output[output_map[obj['label']]] = obj['prob']
             # Set the next frame in the local display stream.
             local_display.set_frame_data(frame)
-            end = time.time()
-            print('{} seconds'.format(end - start))
-            # Send results to the cloud
 
+            # Send results to the back to AWS
             if cloud_output != {}:
                 client.publish(topic=iot_topic, payload=json.dumps(cloud_output))
 
