@@ -24,10 +24,10 @@ def verify_users(face_data):
     try:
         user_id = face_data['FaceMatches'][0]['Face']['ExternalImageId']
         if user_id == 'UG31DMHGB':
-            print('Found a match! It\'s our homeboy Pras!)
+            print('Found a match! It\'s our homeboy Pras!')
             return 'Prasiddha'
         elif user_id == 'UG47CJXQX':
-            print('Found a match! Legendary Bijay!)
+            print('Found a match! Legendary Bijay!')
             return 'Bijay'
     except:
         print('REKOGNITION says, "No Match Found!!"')
