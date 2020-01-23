@@ -7,14 +7,14 @@ git_repo := $(shell env | grep GITHUB_REPO | cut -d "=" -f2)
 git_token := $(shell aws ssm get-parameter --name /github/sshkey --with-decryption --output text --query Parameter.Value)
 
 deploy-vpc:
-	$(info [+] Deploying 3 tier VPC...)
+	$(info [+] Deploying VPC...)
 	@aws cloudformation deploy \
 		--template-file cfn/3tier-vpc.yml \
 		--stack-name three-tier-vpc \
 		--capabilities CAPABILITY_NAMED_IAM
 
 deploy-pipeline:
-	$(info [+] Deploying CFN stack for Codepipeline...)
+	$(info [+] Deploying Codepipeline Stack...)
 	@aws cloudformation deploy \
 		--template-file cfn/pipeline.yml \
 		--stack-name xplorers-rekognition-$(branch) \
@@ -37,7 +37,7 @@ deploy-pipeline:
 .PHONY: deploy-pipeline
 
 deploy-sns:
-	$(info [+] Deploying SNS stack for Xplorers...)
+	$(info [+] Deploying SNS stack...)
 	@aws cloudformation deploy \
 		--template-file cfn/sns-topic.yml \
 		--stack-name xplorers-snstopic-$(branch) \
@@ -47,3 +47,4 @@ deploy-sns:
 			GitHubBranch=$(branch) \
 			AdminPhoneNumber=$(ADMIN_CONTACT_NUMBER) \
 			AdminEmail=$(ADMIN_EMAIL)
+.PHONY: deploy-sns

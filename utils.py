@@ -3,19 +3,19 @@ import datetime
 import os
 
 def compare_faces(collection_id, jpg_data, max_faces=1, face_match_threshold=70):
-    """ 
+    """
     Compares faces with AWS Rekognition Collections
     """
-    rekog = boto3.client('rekognition')
+    rekognition = boto3.client('rekognition')
 
-    return rekog.search_faces_by_image(
+    return rekognition.search_faces_by_image(
         CollectionId=collection_id,
         Image={
             'Bytes': jpg_data.tobytes()
         },
         MaxFaces=max_faces,
-        FaceMatchThreshold=face_match_threshold)    
-    
+        FaceMatchThreshold=face_match_threshold)
+
 
 def verify_users(face_data):
     """
@@ -28,7 +28,7 @@ def verify_users(face_data):
         return 'Bijay'
     elif user_id == 'UKHPQS9HQ':
         return 'Manjil'
-        
+
 def generate_mp3(user_name):
     """
     Generates an MP3 file from Polly and saves it on Deeplens Device
@@ -36,7 +36,7 @@ def generate_mp3(user_name):
     polly = boto3.client('polly')
 
     message = '<speak>\n<prosody rate=\"medium\"><amazon:breath duration=\"long\" volume=\"soft\"/>Howdy ' + ', Welcome to the Office ' + user_name +' <amazon:breath duration=\"short\" volume=\"x-soft\"/></prosody>\n</speak>'
-    
+
     return polly.synthesize_speech(
         OutputFormat = 'mp3',
         TextType = 'ssml',
