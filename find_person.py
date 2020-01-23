@@ -178,16 +178,19 @@ def greengrass_infinite_infer_run():
                                 print(response)
                                 # rfr = cv2.resize(frame, (672, 380))
 
-                                face_data = utils.compare_faces(rekognition_collection_id, jpg_data)
+                                # Compare the picture with Rekognition Collections to find a match
+                                find_a_match = utils.compare_faces(rekognition_collection_id, jpg_data)
 
-                                user_name = utils.verify_users(face_data)
-
-                                utils.play_mp3_greeting(user_name)
+                                if find_a_match:
+                                    # Get the username!
+                                    user_name = utils.verify_users(find_a_match)
+                                    # Greet the identified user!
+                                    utils.play_mp3_greeting(user_name)
 
                                 # reset the timer for the next match
                                 lastmatch = datetime.datetime.utcnow()
                         except Exception as ex:
-                            client.publish(topic=iot_topic, payload='Error in person finder to S3 block: {}'.format(ex))
+                            client.publish(topic=iot_topic, payload='Error Couldn\'t find a match: {}'.format(ex))
 
                     # See https://docs.opencv.org/3.4.1/d6/d6e/group__imgproc__draw.html
                     # for more information about the cv2.rectangle method.

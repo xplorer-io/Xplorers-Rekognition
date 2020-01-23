@@ -4,7 +4,7 @@ import os
 
 def compare_faces(collection_id, jpg_data, max_faces=1, face_match_threshold=70):
     """
-    Compares faces with AWS Rekognition Collections
+    Compares faces with AWS Rekognition Collections to find a match
     """
     rekognition = boto3.client('rekognition')
 
@@ -21,13 +21,16 @@ def verify_users(face_data):
     """
     Based on Rekognition's response, finds who the user is!
     """
-    user_id = face_data['FaceMatches'][0]['Face']['ExternalImageId']
-    if user_id == 'UG31DMHGB':
-        return 'Prasiddha'
-    elif user_id == 'UG47CJXQX':
-        return 'Bijay'
-    elif user_id == 'UKHPQS9HQ':
-        return 'Manjil'
+    try:
+        user_id = face_data['FaceMatches'][0]['Face']['ExternalImageId']
+        if user_id == 'UG31DMHGB':
+            print('Found a match! It\'s our homeboy Pras!)
+            return 'Prasiddha'
+        elif user_id == 'UG47CJXQX':
+            print('Found a match! Legendary Bijay!)
+            return 'Bijay'
+    except:
+        print('REKOGNITION says, "No Match Found!!"')
 
 def generate_mp3(user_name):
     """
